@@ -4,8 +4,9 @@
 * (Soon to be) AI model that will precisely predict Croatia's 2024 parliamentary elections, built by 4 high schoolers
 
 ## INSTALLATION GUIDE:
+* Open the link below and scroll in chat to set up the project locally
 * https://chat.openai.com/share/23b544d8-7f90-41f4-8974-06f5848349c2
-* Open the link above and scroll in chat to set up the project locally
+* [Git commands cheat sheet](https://education.github.com/git-cheat-sheet-education.pdf)
 
 ## RULES:
 * Check for new tasks on Taskade before doing anything else
