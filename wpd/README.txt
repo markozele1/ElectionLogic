@@ -1,0 +1,9 @@
+- 19 fileova s postotcima za svaku stranku po datumima
+- Unknown.png - data graph
+- wpd_datasets.csv - all data UNEDITED (postotci glasova za stranke po datumima)
+- all.csv - all data ready for editing (NISU MAKNUTI STVARNI REZULTATI IZBORA)
+- dates.py - program za editiranje podataka iz filea all.csv
+- final_data.csv - editan file s posloženim postotcima glasova po strankama i po udaljenosti od prvog datuma (12.1.2014.) u danima (MAKNUTI SU STVARNI REZULTATI IZBORA)
+- final_data_uređeno.csv - uređeno sa imenima stranaka i tim natpisima (MAKNUTI SU STVARNI REZULTATI IZBORA)
+- izbori.csv - postoci glasova na izborima po strankama i te tri godine
+- wpd_project.json - backup projekta (nebitno)
