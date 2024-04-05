@@ -67,5 +67,5 @@ class ElectionVisualizer:
 
 
 if __name__ == "__main__":
-    visualizer = ElectionVisualizer(2016)
+    visualizer = ElectionVisualizer(2020)
     visualizer.visualize()

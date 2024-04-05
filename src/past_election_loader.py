@@ -65,4 +65,3 @@ class ElectionLoader:
                 self.candidates[party].add_candidate(Candidate(column, votes))
 
 
-
