@@ -11,7 +11,7 @@ for item in trends:
     for party_name in item['parties']:
         party_names.add(party_name)
 
-# Write data to CSV file
+# Write data to CSV-2007 file
 csv_file_path = "poll_data.csv"
 with open(csv_file_path, "w", newline='') as csvfile:
     fieldnames = ["date"] + list(party_names)
@@ -26,7 +26,7 @@ with open(csv_file_path, "w", newline='') as csvfile:
         row_data.update(item["parties"])
         writer.writerow(row_data)
 
-# Read data from CSV file
+# Read data from CSV-2007 file
 with open(csv_file_path, newline='') as csvfile:
     reader = csv.DictReader(csvfile)
 
