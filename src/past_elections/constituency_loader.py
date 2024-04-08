@@ -45,7 +45,7 @@ class ElectionLoader:
                 csv_file_name = "12_XII_" + f"nm{constituency[3]}"
             else:
                 csv_file_name = constituency + "_" + names[constituency]
-            csv_file_name += "_izborna_jedinica_REDOVITA_BM.csv"
+            csv_file_name += "_izborna_jedinica_REDOVITA_BM.csv" if year == 2011 else "_izborna_jedinica_Redovita_BM.csv"
             self.df = pd.read_csv(os.path.join(PROJECT_PATH, f"past_elections\CSV-{year}\{csv_file_name}"), encoding="windows-1250", sep=";")
         else:
             csv_regular_results, csv_special_results, csv_abroad_results = self.load_constituency_files(year, constituency)
