@@ -84,7 +84,13 @@ class ElectionLoader:
     def load_candidates2011(self):
         last = self.df[self.df.columns[11:]].tail(1).to_dict(orient='records')[0]
         for party in last:
-            last[party] = Party(party, [], votes=last[party])
+            votes = str(last[party])
+            if votes.endswith(".0"):
+                votes = votes[:-2]
+            votes = votes.replace(".", "")
+            if votes == "nan":
+                votes = "0"
+            last[party] = Party(party, [], votes=int(votes))
         self.candidates = last
 
     @staticmethod
