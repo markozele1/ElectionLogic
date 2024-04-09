@@ -1,4 +1,5 @@
 # -*- coding: windows-1250 -*-
+import csv
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,7 +37,7 @@ def format_name(name) -> str:
     return name
 
 
-def predict_next_point(inpt_years, inpt_percentages):
+def predict_next_point(inpt_years, inpt_percentages, year_to_predict):
     years = np.array(inpt_years).reshape(-1, 1)  # Reshaping to column vector
     percentages = np.array(inpt_percentages).reshape(-1, 1)  # Percentages of votes for each election year
 
@@ -45,23 +46,23 @@ def predict_next_point(inpt_years, inpt_percentages):
     model.fit(years, percentages)
 
     # Predict the outcome for the 2024 election
-    predicted_year = np.array([[2021]])  # Reshaping to column vector
+    predicted_year = np.array([[year_to_predict-3]])  # Reshaping to column vector
     predicted_percentage = model.predict(predicted_year)[0][0]
     if predicted_percentage < 0:
         predicted_percentage = 0
 
-    return inpt_years + [2024], inpt_percentages + [predicted_percentage]
+    return inpt_years + [year_to_predict], inpt_percentages + [predicted_percentage]
 
 
-def get_constituency_past_data(constituency):
+def get_constituency_past_data(constituency, years):
     return {
         year: {party.name: party.votes for party in election_data[year][constituency]}
-        for year in election_data.keys()
+        for year in years
     }
 
 
-def get_constituency_party_votes_and_percentages(constituency):
-    d = get_constituency_past_data(constituency)
+def get_constituency_party_votes_and_percentages(constituency, years):
+    d = get_constituency_past_data(constituency, years)
 
     data = {}
     for year in d.keys():
@@ -114,11 +115,11 @@ def get_constituency_party_votes_and_percentages(constituency):
 
 
 def show_constituency_past_data(constituency):
-    years, party_votes, party_percentages = get_constituency_party_votes_and_percentages(constituency)
+    years, party_votes, party_percentages = get_constituency_party_votes_and_percentages(constituency, [2007, 2011, 2015, 2016])
 
     fig, axs = plt.subplots(1, 2, figsize=(12, 5))
     plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.4, hspace=0.4)
-    plt.xticks(list(range(2007, 2025, 2)))
+    plt.xticks(list(range(years[0], years[-1] + 5, 2)))
 
     # Plot each party's votes over the years
     for party, votes in party_votes.items():
@@ -143,7 +144,7 @@ def show_constituency_past_data(constituency):
     # Plot each party's votes over the years
     for party, percentages in party_percentages.items():
         percentages = [(p * 100 if str(p) != "nan" else 0) for p in percentages]
-        years2, percentages = predict_next_point(years, percentages)
+        years2, percentages = predict_next_point(years, percentages, years[-1]+4)
         new_party_percentages[party] = percentages[-1]
         axs[1].plot(years2, percentages, label=party)
         if max(percentages) > 8 and len(party) < 20:
@@ -161,13 +162,89 @@ def show_constituency_past_data(constituency):
     plt.show()
 
 
-def predict_new_elections(constituency):
-    years, party_votes, party_percentages = get_constituency_party_votes_and_percentages(constituency)
-    new_party_percentages = {}
+def get_2020_constituency_prediction_errors(constituency):
+    years, party_votes, party_percentages = get_constituency_party_votes_and_percentages(constituency,
+                                                                                         [2007, 2011, 2015, 2016])
+    years2020, party_votes2020, party_percentages2020 = get_constituency_party_votes_and_percentages(constituency,
+                                                                                         [2007, 2011, 2015, 2016, 2020])
 
+    predicted2020 = predict_new_elections(constituency, years)
+
+    predicted_percentages = party_percentages.copy()
+    for party in party_percentages.keys():
+        predicted_percentages[party].append(predicted2020[party])
+
+    error = {}
+    for party in party_percentages2020:
+        if party in predicted_percentages:
+            predicted = predicted_percentages[party][-1]
+            actual = party_percentages2020[party][-1]
+            error[party] = predicted - actual
+        else:
+            error[party] = None
+
+    return predicted_percentages, party_percentages2020, error
+
+
+def save_2020_prediction_data():
+    rows = [
+        ["Stranka", "2020. globalne predikcije",
+         *[str(i) + ". izborna jedinica, predikcije 2020." for i in range(1, 11)],
+         *[str(i) + ". izborna jedinica, rezultati 2020." for i in range(1, 11)],
+         "2024. globalne predikcije",
+         *[str(i) + ". izborna jedinica, predikcije 2024." for i in range(1, 11)],
+         ]
+    ]
+
+    party_data = {}
+    for i, c in enumerate(constituencies):
+        if c == "11":
+            break
+
+        pp, pp2020, err = get_2020_constituency_prediction_errors(c)
+
+        for party in pp2020:
+            if party not in party_data:
+                party_data[party] = [0] * 32
+
+            parties_seats_actual = dhondt_method(14, {p: v[-1] for p, v in pp2020.items()})
+            parties_seats_predicted = dhondt_method(14, {p: v[-1] for p, v in pp.items()})
+
+            if party not in parties_seats_predicted:
+                parties_seats_predicted[party] = None
+
+            party_data[party][i+1] = parties_seats_predicted[party]
+            party_data[party][i+11] = parties_seats_actual[party]
+            party_data[party][0] += parties_seats_predicted[party] or 0
+
+        prediction2024 = predict_new_elections(c, [2007, 2011, 2015, 2016, 2020])
+        for party in prediction2024.keys():
+            parties_seats_predicted2024 = dhondt_method(14, prediction2024)
+
+            if party not in parties_seats_predicted2024:
+                parties_seats_predicted2024[party] = None
+
+            party_data[party][i+22] = parties_seats_predicted2024[party]
+            party_data[party][21] += parties_seats_predicted2024[party] or 0
+
+            if not sum(list(map(lambda x: 0 if x is None else x, party_data[party]))):
+                party_data.pop(party)
+
+    for party in party_data.keys():
+        rows.append([party] + party_data[party])
+
+    with open("2020_prediction_errors.csv", 'w', newline='', encoding="windows-1250") as csvfile:
+        writer = csv.writer(csvfile)
+        for row in rows:
+            writer.writerow(row)
+
+
+def predict_new_elections(constituency, years):
+    years2, party_votes, party_percentages = get_constituency_party_votes_and_percentages(constituency, years)
+    new_party_percentages = {}
     for party, percentages in party_percentages.items():
         percentages = [(p * 100 if str(p) != "nan" else 0) for p in percentages]
-        years2, percentages = predict_next_point(years, percentages)
+        years3, percentages = predict_next_point(years2, percentages, years2[-1] + 4)
         new_party_percentages[party] = percentages[-1]
 
     return new_party_percentages
@@ -207,7 +284,7 @@ def show_election_results():
     for c in constituencies:
         if c == "11": break
 
-        predicted = predict_new_elections(c)
+        predicted = predict_new_elections(c, years)
 
         seats = {k: v for k, v in dhondt_method(14, predicted).items() if v}
 
@@ -312,7 +389,7 @@ uk = {}
 for c in constituencies:
     if c == "11":
         break
-    p = predict_new_elections(c)
+    p = predict_new_elections(c, list(election_data.keys()))
     seats = dhondt_method(14, p)
     print()
     print("Constituency", c)
@@ -326,4 +403,4 @@ for c in constituencies:
 
 print(uk)
 
-show_election_results()
+save_2020_prediction_data()
