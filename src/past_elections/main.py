@@ -168,6 +168,9 @@ def get_2020_constituency_prediction_errors(constituency):
     years2020, party_votes2020, party_percentages2020 = get_constituency_party_votes_and_percentages(constituency,
                                                                                          [2007, 2011, 2015, 2016, 2020])
 
+    for party in party_percentages2020:
+        party_percentages2020[party][-1] *= 100
+
     predicted2020 = predict_new_elections(constituency, years)
 
     predicted_percentages = party_percentages.copy()
@@ -197,6 +200,7 @@ def save_2020_prediction_data():
     ]
 
     party_data = {}
+    predicted_indexed_data = {}
     for i, c in enumerate(constituencies):
         if c == "11":
             break
@@ -207,28 +211,56 @@ def save_2020_prediction_data():
             if party not in party_data:
                 party_data[party] = [0] * 32
 
-            parties_seats_actual = dhondt_method(14, {p: v[-1] for p, v in pp2020.items()})
-            parties_seats_predicted = dhondt_method(14, {p: v[-1] for p, v in pp.items()})
+            # parties_seats_actual = dhondt_method(14, {p: v[-1] for p, v in pp2020.items()})
+            # parties_seats_predicted = dhondt_method(14, {p: v[-1] for p, v in pp.items()})
 
-            if party not in parties_seats_predicted:
-                parties_seats_predicted[party] = None
+            if party not in pp:
+                pp[party] = [None]
 
-            party_data[party][i+1] = parties_seats_predicted[party]
-            party_data[party][i+11] = parties_seats_actual[party]
-            party_data[party][0] += parties_seats_predicted[party] or 0
+            party_data[party][i+1] = pp[party][-1]
+            party_data[party][i+11] = pp2020[party][-1]
+            party_data[party][0] += pp[party][-1] or 0
 
         prediction2024 = predict_new_elections(c, [2007, 2011, 2015, 2016, 2020])
         for party in prediction2024.keys():
-            parties_seats_predicted2024 = dhondt_method(14, prediction2024)
+            # parties_seats_predicted2024 = dhondt_method(14, prediction2024)
 
-            if party not in parties_seats_predicted2024:
-                parties_seats_predicted2024[party] = None
-
-            party_data[party][i+22] = parties_seats_predicted2024[party]
-            party_data[party][21] += parties_seats_predicted2024[party] or 0
+            party_data[party][i+22] = prediction2024[party]
+            party_data[party][21] += prediction2024[party] or 0
 
             if not sum(list(map(lambda x: 0 if x is None else x, party_data[party]))):
                 party_data.pop(party)
+
+        print()
+        print("Izborna jedinica", c)
+        indexed_parties = {}
+        for party in err:
+            actual = pp2020[party][-1]
+            if actual > 5:
+                print(party, round(pp[party][-1] or 0, 2), round(pp2020[party][-1] or 0, 2), round(err[party] or 0, 2))
+                accuracy = (pp[party][-1] or 0) / actual
+                if accuracy == 0:
+                    accuracy = 1
+                indexed_parties[party] = prediction2024[party] / accuracy
+                print("INDEXED: ", prediction2024[party] / accuracy)
+                print()
+
+        dhondt = {k: v for k, v in dhondt_method(14, indexed_parties).items() if v}
+        predicted_indexed_data[c] = dhondt
+
+    uk = {}
+    for c in constituencies:
+        if c == "11": break
+        print()
+        print("Izborna jedinica", c)
+        print(predicted_indexed_data[c])
+        for party in predicted_indexed_data[c]:
+            if party not in uk:
+                uk[party] = 0
+            uk[party] += predicted_indexed_data[c][party]
+
+    print()
+    print(uk)
 
     for party in party_data.keys():
         rows.append([party] + party_data[party])
