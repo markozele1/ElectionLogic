@@ -368,71 +368,72 @@ def show_election_results():
     plt.show()
 
 
-constituencies = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11",
-                  "12_13", "12_23", "12_33", "12_43", "12_53", "12_63"]
+if __name__ == "__main__":
+    constituencies = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11",
+                      "12_13", "12_23", "12_33", "12_43", "12_53", "12_63"]
 
-election_data = {2007: {}, 2011: {}, 2015: {}, 2016: {}, 2020: {}}
-for year in election_data.keys():
+    election_data = {2007: {}, 2011: {}, 2015: {}, 2016: {}, 2020: {}}
+    for year in election_data.keys():
+        for c in constituencies:
+            election_data[year][c] = []
+
+            loader = ElectionLoader(year, c)
+            loader.load_candidates()
+
+            for party in sorted(loader.candidates.values(), key=lambda x: x.votes, reverse=True):
+                if str(party.votes) == "nan":
+                    party.votes = 0
+                election_data[year][c].append(party)
+
+
+    # for year in election_data.keys():
+    #     print("Year", year)
+    #     print("-------------")
+    #     dhondt = {}
+    #     for c in election_data[year].keys():
+    #         if c == "11":
+    #             break
+    #         print()
+    #         print("\tConstituency", c)
+    #         parties2 = {}
+    #         for party in election_data[year][c]:
+    #             name = party.name
+    #             if party.name in parties_mapping[year]:
+    #                 name = parties_mapping[year][party.name]
+    #             parties2[name] = party.votes
+    #             if year in {2007, 2011}:
+    #                 if str(party.votes) == "nan":
+    #                     parties2[name] = 0
+    #                 else:
+    #                     parties2[name] = int(str(party.votes).replace(".", ""))
+    #             print("\t\t-", name, " " * (40 - len(name)), party.votes)
+    #         d = {k: v for k, v in dhondt_method(14, parties2).items() if v}.items()
+    #         for k, v in d:
+    #             if k in dhondt:
+    #                 dhondt[k] += v
+    #             else:
+    #                 dhondt[k] = v
+    #     print()
+    #     print("D'HONDT: ", dhondt)
+    #     print()
+
+
+    uk = {}
     for c in constituencies:
-        election_data[year][c] = []
+        if c == "11":
+            break
+        p = predict_new_elections(c, list(election_data.keys()))
+        seats = dhondt_method(14, p)
+        print()
+        print("Constituency", c)
+        for party, seat in seats.items():
+            if seat > 0:
+                print(party, " - ", seat)
+                if party in uk:
+                    uk[party] += seat
+                else:
+                    uk[party] = seat
 
-        loader = ElectionLoader(year, c)
-        loader.load_candidates()
+    print(uk)
 
-        for party in sorted(loader.candidates.values(), key=lambda x: x.votes, reverse=True):
-            if str(party.votes) == "nan":
-                party.votes = 0
-            election_data[year][c].append(party)
-
-
-# for year in election_data.keys():
-#     print("Year", year)
-#     print("-------------")
-#     dhondt = {}
-#     for c in election_data[year].keys():
-#         if c == "11":
-#             break
-#         print()
-#         print("\tConstituency", c)
-#         parties2 = {}
-#         for party in election_data[year][c]:
-#             name = party.name
-#             if party.name in parties_mapping[year]:
-#                 name = parties_mapping[year][party.name]
-#             parties2[name] = party.votes
-#             if year in {2007, 2011}:
-#                 if str(party.votes) == "nan":
-#                     parties2[name] = 0
-#                 else:
-#                     parties2[name] = int(str(party.votes).replace(".", ""))
-#             print("\t\t-", name, " " * (40 - len(name)), party.votes)
-#         d = {k: v for k, v in dhondt_method(14, parties2).items() if v}.items()
-#         for k, v in d:
-#             if k in dhondt:
-#                 dhondt[k] += v
-#             else:
-#                 dhondt[k] = v
-#     print()
-#     print("D'HONDT: ", dhondt)
-#     print()
-
-
-uk = {}
-for c in constituencies:
-    if c == "11":
-        break
-    p = predict_new_elections(c, list(election_data.keys()))
-    seats = dhondt_method(14, p)
-    print()
-    print("Constituency", c)
-    for party, seat in seats.items():
-        if seat > 0:
-            print(party, " - ", seat)
-            if party in uk:
-                uk[party] += seat
-            else:
-                uk[party] = seat
-
-print(uk)
-
-save_2020_prediction_data()
+    save_2020_prediction_data()
