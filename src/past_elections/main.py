@@ -266,7 +266,7 @@ def save_2020_prediction_data():
         rows.append([party] + party_data[party])
 
     with open("2020_prediction_errors.csv", 'w', newline='', encoding="windows-1250") as csvfile:
-        writer = csv.writer(csvfile)
+        writer = csv.writer(csvfile, delimiter=",")
         for row in rows:
             writer.writerow(row)
 

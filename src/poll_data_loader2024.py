@@ -1,3 +1,6 @@
+# -*- coding: windows-1250 -*-
+import csv
+
 import pandas as pd
 
 from src.past_elections.main import dhondt_method
@@ -43,3 +46,18 @@ for c in constituencies:
 
 print()
 print("UK: ", uk)
+
+with open("poll_data2024.csv", "w", newline="", encoding="windows-1250") as file:
+    writer = csv.writer(file)
+    writer.writerow(["STRANKA"] + list(constituencies.keys()))
+    for party in ["HDZ", "SDP", "MOST", "MOŽEMO", "DP", "FOKUS", "IDS", "NPS"]:
+        row = [party]
+        for c in party_percentages:
+            if party in party_percentages[c]:
+                percentage = party_percentages[c][party]
+                if percentage == float("nan"):
+                    percentage = 0
+                row.append(percentage)
+            else:
+                row.append(0)
+        writer.writerow(row)
