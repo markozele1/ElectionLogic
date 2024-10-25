@@ -1,15 +1,14 @@
 # ElectionLogic
 
-## What is this?
-* (Soon to be) AI model that will precisely predict Croatia's 2024 parliamentary elections, built by 4 high schoolers
+## Project Overview
+This project is an **AI model** designed to predict Croatia's 2024 parliamentary election outcomes, achieving an impressive **92% accuracy**.
 
-## INSTALLATION GUIDE:
-* Open the link [here](https://chat.openai.com/share/23b544d8-7f90-41f4-8974-06f5848349c2) and scroll in chat to set up the project locally
-* Git commands cheat sheet [here](https://education.github.com/git-cheat-sheet-education.pdf)
+### Background
+The model was developed by a team of four high school students as part of **N1** and **BIRD Incubator's** *"AI Elections"* competition. Although we did not officially advance to the final round, our prediction accuracy ranked us **3rd out of 12 teams**.
 
-## RULES:
-* Check for new tasks on Taskade before doing anything else
-* Keep Taskade and ChatGPT tabs always open
-* Before writing new code, fetch from main to see if there were any updates
-* Never push to main branch, always open new branch for new code
-* NO PUSHING CODE BEFORE TESTING PLS
+### Technical Approach
+Our model integrates:
+- **VARMAX (Vector Autoregressive Moving Average with Exogenous Regressors)** modeling for multivariate time-series analysis.
+- **Linear Autoregression** techniques.
+- **Polling data** to enhance prediction precision.
+
