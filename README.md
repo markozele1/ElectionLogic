@@ -12,3 +12,5 @@ Our model integrates:
 - **VARMAX (Vector Autoregressive Moving Average with Exogenous Regressors)** modeling for multivariate time-series analysis.
 - **Linear Autoregression** techniques.
 - **Polling data** to enhance prediction precision.
+
+###NOTE: The repo doesn't contain all code used for the competition, the code here is a mess...to be fixed
